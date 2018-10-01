@@ -1,11 +1,11 @@
-const mailer = require('nodemailer'); //Отправка писем 
-const requestify = require('requestify'); //REST запросы
-const CronJob = require('cron').CronJob;//Планировщик
-const Cfg = require('./Cfg.js')//Конфиг
-const log4js = require('log4js');//Логирование
-log4js.configure((Cfg.log))//Конфиг логирования
+const mailer = require('nodemailer'); //РћС‚РїСЂР°РІРєР° РїРёСЃРµРј 
+const requestify = require('requestify'); //REST Р·Р°РїСЂРѕСЃС‹
+const CronJob = require('cron').CronJob;//РџР»Р°РЅРёСЂРѕРІС‰РёРє
+const Cfg = require('./Cfg.js')//РљРѕРЅС„РёРі
+const log4js = require('log4js');//Р›РѕРіРёСЂРѕРІР°РЅРёРµ
+log4js.configure((Cfg.log))//РљРѕРЅС„РёРі Р»РѕРіРёСЂРѕРІР°РЅРёСЏ
 const logger = log4js.getLogger('mail');
-// Функция формирования сообщения
+// Р¤СѓРЅРєС†РёСЏ С„РѕСЂРјРёСЂРѕРІР°РЅРёСЏ СЃРѕРѕР±С‰РµРЅРёСЏ
 function createMessage(object) {
     let message = {};
     message.from = Cfg.mailFrom;
@@ -16,13 +16,13 @@ function createMessage(object) {
     logger.info('Message create');
     return message
 }
-//Асинхронный forEach
+//РђСЃРёРЅС…СЂРѕРЅРЅС‹Р№ forEach
 async function asyncForEach(array, callback) {
     for (let index = 0; index < array.length; index++) {
         await callback(array[index], index, array)
     }
 }
-//Поиск и получение записи
+//РџРѕРёСЃРє Рё РїРѕР»СѓС‡РµРЅРёРµ Р·Р°РїРёСЃРё
 async function getRecord(uri) {
     let result = (requestify.get(uri, Cfg.authRest)
         .then(response => {
@@ -33,7 +33,7 @@ async function getRecord(uri) {
         }));
     return await result
 }
-//Отправка e-mail
+//РћС‚РїСЂР°РІРєР° e-mail
 async function sendMailMessage(message, uri) {
     let smtpTransport = mailer.createTransport(Cfg.authMail);
     await smtpTransport.sendMail(createMessage(message), (error, response) => {
@@ -41,7 +41,7 @@ async function sendMailMessage(message, uri) {
             logger.error(error);
         } else {
             logger.info("Message " + JSON.stringify(message) + " sent");
-            //Удаление записи в SM
+            //РЈРґР°Р»РµРЅРёРµ Р·Р°РїРёСЃРё РІ SM
             requestify.delete(uri, Cfg.authRest).then(function (response) {
                 response.getBody();
                 logger.info("Delete " + uri + " in Service Manager message");
@@ -50,7 +50,7 @@ async function sendMailMessage(message, uri) {
         }
     });
 }
-//Тело приложения
+//РўРµР»Рѕ РїСЂРёР»РѕР¶РµРЅРёСЏ
 const job = new CronJob(Cfg.cronPeriod, function () {
     requestify.get(Cfg.url, Cfg.authRest).then(response => {
         let json = JSON.parse(response.body);
@@ -58,8 +58,8 @@ const job = new CronJob(Cfg.cronPeriod, function () {
         if (!result) return logger.info('No entries to process')
         asyncForEach(result, async (obj) => {
             let one = obj.tlmrNotifications2;
-            let uri = Cfg.url + one.uid; //Собираем ссылку для обрабтки записи
-            //Обработка единичной записи
+            let uri = Cfg.url + one.uid; //РЎРѕР±РёСЂР°РµРј СЃСЃС‹Р»РєСѓ РґР»СЏ РѕР±СЂР°Р±С‚РєРё Р·Р°РїРёСЃРё
+            //РћР±СЂР°Р±РѕС‚РєР° РµРґРёРЅРёС‡РЅРѕР№ Р·Р°РїРёСЃРё
             await getRecord(uri).then(async result => {
                 await sendMailMessage(result, uri);
             });
