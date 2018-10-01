@@ -1,0 +1,15 @@
+{
+  "name": "nodejs-smsend-mail",
+  "version": "0.0.0",
+  "description": "NodejsSMsendMail",
+  "main": "app.js",
+  "author": {
+    "name": "Ivan Ratnikov"
+  },
+  "dependencies": {
+    "cron": "^1.4.1",
+    "log4js": "^3.0.5",
+    "nodemailer": "^2.7.2",
+    "requestify": "^0.2.5"
+  }
+}
